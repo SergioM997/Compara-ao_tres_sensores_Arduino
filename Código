@@ -1,0 +1,43 @@
+#include <OneWire.h> //INCLUSÃO DE BIBLIOTECA
+#include <DallasTemperature.h> //INCLUSÃO DE BIBLIOTECA
+#define DS18B20 7 //DEFINE O PINO DIGITAL UTILIZADO PELO SENSOR
+
+void setup(){
+  Serial.begin(9600); //INICIALIZA A SERIAL
+  OneWire ourWire(DS18B20); //CONFIGURA UMA INSTÂNCIA ONEWIRE PARA SE COMUNICAR COM O SENSOR
+  DallasTemperature sensors(&ourWire); //BIBLIOTECA DallasTemperature UTILIZA A OneWire
+  const int pinTermistor = A0;
+  const double beta = 3600.0;
+  const double r0 = 10000.0;
+  const double t0 = 273.0 + 25.0;
+  const double rx = r0 * exp(-beta/t0);
+  const double vcc = 5.0;
+  const double R = 20000.0;
+  const int nAmostras = 5;
+  const int sensorPin = A2; //PINO ANALÓGICO UTILIZADO PELO SENSOR
+  float temperatura = 0; //VARIÁVEL DO TIPO FLOAT          
+  sensors.begin(); //INICIA O SENSOR
+  delay(1000); //INTERVALO DE 1 SEGUNDO
+}
+ 
+void loop(){
+  sensors.requestTemperatures();//SOLICITA QUE A FUNÇÃO INFORME A TEMPERATURA DO SENSOR
+  Serial.print("Temperatura DS18: "); //IMPRIME O TEXTO NA SERIAL
+  Serial.print(sensors.getTempCByIndex(0)); //IMPRIME NA SERIAL O VALOR DE TEMPERATURA MEDIDO
+  Serial.println("*C"); //IMPRIME O TEXTO NA SERIAL
+  delay(250);//INTERVALO DE 250 MILISSEGUNDOS
+  int soma = 0;
+  for (int i = 0; i < nAmostras; i++) {
+    soma += analogRead(pinTermistor);
+    delay (10);
+  }
+  double v = (vcc*soma)/(nAmostras*1024.0);
+  double rt = (vcc*R)/v - R;
+  double t = beta / log(rt/rx);
+  Serial.println (t-273.0);
+  delay (500);
+  temperatura = (analogRead(sensorPin) * 0.0048828125 * 100); //VARIÁVEL RECEBE A TEMPERATURA MEDIDA
+  Serial.print("Temperatura LM35 = "); //IMPRIME O TEXTO NA SERIAL
+  Serial.print(temperatura); //IMPRIME NA SERIAL A TEMPERATURA MEDIDA
+  Serial.println(" C"); //IMPRIME O TEXTO NA SERIAL
+}
